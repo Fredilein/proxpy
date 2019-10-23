@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-import socket, sys
+import socket, sys, time
 import _thread
 
 
@@ -10,20 +10,25 @@ BUFFER_SIZE = 8192
 
 
 def proxy_server(host, port, conn, data, addr):
-    print("[*] Proxy server")
+    # print("[*] Proxy server")
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
         s.send(data)
 
-        while(1):
+        timeout = 2
+        timeout_start = time.time()
+        result = ""
+        while(time.time() < timeout_start + timeout):
             res = s.recv(BUFFER_SIZE)
 
             if (len(res) > 0):
                 conn.send(res)
-                print("Response:\n{}".format(res))
+                result = result + res.decode('utf-8')
             else:
                 break
+
+        print("[RESPONSE]\n{}\n".format(result))
 
         s.close()
         conn.close()
@@ -36,8 +41,7 @@ def proxy_server(host, port, conn, data, addr):
 
 def handle_conn(conn, data, addr):
     """parse request to connect to remote host"""
-    print("[*] Handle connection")
-    print("Data:\n{}".format(data))
+    # print("[*] Handle connection")
     first_line = data.split(b'\n')[0]
 
     url = first_line.split(b' ')[1]
@@ -72,10 +76,10 @@ def handle_conn(conn, data, addr):
 
     data_new[1] = path_new
 
-    data = str(' '.join(data_new)).encode('utf-8')
+    data_str_new = str(' '.join(data_new))
+    data = data_str_new.encode('utf-8')
 
-    print("\nhost: {}\nport: {}\nconn: {}\ndata: {}\naddr: {}\n".format(host, port, conn, data, addr))
-    print("type of data: {}".format(type(data)))
+    print("[REQUEST]\n{}\n".format(data_str_new))
 
     proxy_server(host, port, conn, data, addr)
 
