@@ -1,4 +1,4 @@
-import socket, time
+import socket, time, os
 
 
 
@@ -93,9 +93,21 @@ class Connection:
             return
 
             
-    def print_data(self):
+    def process_request(self):
+        os.system("clear")
         print("[REQUEST]\n{}\n".format(self.data))
+        print("1) Forward request")
+        print("2) Modify request")
+        while(True):
+            r = int(input("> "))
+            if r in [1, 2]:
+                break
+            else:
+                print("Nope...")
+        if r == 1:
+            self.proxy_server()
+            os.system("clear")
+            print("[REQUEST]\n{}\n".format(self.data))
+            print("[RESPONSE]\n{}\n".format(self.response))
+            input("> Continue ")
 
-
-    def print_response(self):
-        print("[RESPONSE]\n{}\n".format(self.response))

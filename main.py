@@ -21,8 +21,7 @@ def handle_connections():
         conn = Connection(conn_tuple)
         if conn.method == "CONNECT":
             continue
-        conn.print_data()
-        conn.proxy_server()
+        conn.process_request()
     
 
 def start():
