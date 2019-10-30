@@ -5,6 +5,7 @@ BUFFER_SIZE = 8192
 
 
 def parse_data(data):
+    """reads host, port, method, data (as string) from request and returns them"""
 
     first_line = data.split(b'\n')[0]
 
@@ -17,7 +18,6 @@ def parse_data(data):
         full_addr = url[(http_pos+3):]
 
     port_pos = full_addr.find(b":")
-
     host_pos = full_addr.find(b"/")
     if host_pos == -1:
         host_pos = len(full_addr)
@@ -31,22 +31,21 @@ def parse_data(data):
 
     # Remove host from requested resource path
     data_str = data.decode('utf-8')
-    data_new = data_str.split(' ')
-    path_orig = data_new[1]
+    data_arr = data_str.split(' ')
+    path_orig = data_arr[1]
     path_orig_arr = path_orig.split('/')
     if len(path_orig_arr) > 3:
         path_new = '/' + '/'.join(path_orig_arr[3:])
     else:
         path_new = '/'
+    data_arr[1] = path_new
 
-    data_new[1] = path_new
+    data_new = str(' '.join(data_arr))
+    data = data_new.encode('utf-8')
 
-    data_str_new = str(' '.join(data_new))
-    data = data_str_new.encode('utf-8')
+    method = data_arr[0]
 
-    method = data_new[0]
-
-    return host, port, data_str_new, method
+    return host, port, data_new, method
 
 
 class Connection:
@@ -59,9 +58,7 @@ class Connection:
         self.data = data
         self.method = method
 
-
     def proxy_server(self):
-        # print("[*] Proxy server")
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))

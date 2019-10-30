@@ -20,10 +20,9 @@ def handle_connections():
             continue
         conn.print_data()
         conn.proxy_server()
-        time.sleep(3)
     
 def start():
-    """start listening for incoming connections and spawn threads for them"""
+    """listen for incoming connections and put them in the connections queue"""
 
     f = Figlet(font='slant')
     print(f.renderText('proxpy'))
@@ -45,12 +44,10 @@ def start():
         try:
             conn, _ = s.accept()
             data = conn.recv(BUFFER_SIZE)
-            # _thread.start_new_thread(handle_conn, (conn, data))
-            # handle_conn(conn, data)
             connections.put((conn, data))
         except KeyboardInterrupt:
-            s.close()
             print("\n[*] Shutting down...")
+            s.close()
             sys.exit(1)
 
 start()
