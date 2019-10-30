@@ -16,6 +16,8 @@ connections = queue.Queue(maxsize=100)
 
 
 def handle_connections():
+    """thread which works through the connections queue"""
+
     while(True):
         conn_tuple = connections.get()
         conn = Connection(conn_tuple)
@@ -27,7 +29,7 @@ def handle_connections():
     
 
 def start():
-    """listen for incoming connections and put them in the connections queue"""
+    """thread which listens for incoming connections and puts them in the connections queue"""
 
     os.system("clear")
     f = Figlet(font='slant')
