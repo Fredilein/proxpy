@@ -1,4 +1,5 @@
-import socket, time, os
+import socket, time, os, tempfile
+from subprocess import call
 
 
 
@@ -103,11 +104,24 @@ class Connection:
             if r in [1, 2]:
                 break
             else:
-                print("Nope...")
+                print("Get your shit together")
+
         if r == 1:
+            # Forward request
             self.proxy_server()
             os.system("clear")
             print("[REQUEST]\n{}\n".format(self.data))
             print("[RESPONSE]\n{}\n".format(self.response))
             input("> Continue ")
 
+        elif r == 2:
+            # Modify request
+            editor = os.environ.get('EDITOR', 'vim')
+            with tempfile.NamedTemporaryFile(suffix=".tmp") as tf:
+                tf.write(self.data.encode('utf-8'))
+                tf.flush()
+                call([editor, tf.name])
+                tf.seek(0)
+                self.data = tf.read().decode('utf-8')
+
+            self.process_request()

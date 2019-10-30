@@ -22,6 +22,8 @@ def handle_connections():
         if conn.method == "CONNECT":
             continue
         conn.process_request()
+        os.system("clear")
+        print("Waiting for request...")
     
 
 def start():
