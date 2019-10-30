@@ -1,11 +1,13 @@
 import socket, time
 
 
+
 BUFFER_SIZE = 8192
 
 
+
 def parse_data(data):
-    """reads host, port, method, data (as string) from request and returns them"""
+    """parses host, port, method, decoded data from request and returns them"""
 
     first_line = data.split(b'\n')[0]
 
@@ -50,6 +52,7 @@ def parse_data(data):
 
 class Connection:
 
+
     def __init__(self, c):
         host, port, data, method = parse_data(c[1])
         self.conn = c[0]
@@ -57,6 +60,8 @@ class Connection:
         self.port = port
         self.data = data
         self.method = method
+        self.response = ""
+
 
     def proxy_server(self):
         try:
@@ -69,26 +74,28 @@ class Connection:
             result = ""
             while(time.time() < timeout_start + timeout):
                 res = s.recv(BUFFER_SIZE)
-
                 if (len(res) > 0):
                     self.conn.send(res)
                     result = result + res.decode('utf-8')
                 else:
                     break
-
-            print("[RESPONSE]\n{}\n".format(result))
+            self.response = result
 
             s.close()
             self.conn.close()
 
             return
+
         except socket.error:
             s.close()
             self.conn.close()
+
             return
+
             
     def print_data(self):
-        print("REQUEST:\n{}\n".format(self.data))
+        print("[REQUEST]\n{}\n".format(self.data))
 
 
-
+    def print_response(self):
+        print("[RESPONSE]\n{}\n".format(self.response))

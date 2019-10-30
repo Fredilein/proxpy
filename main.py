@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
-import socket, sys, time, queue
+import socket, sys, time, queue, os
 import _thread
 from pyfiglet import Figlet
 from connection import Connection
+
 
 
 BUFFER_SIZE = 8192
@@ -10,7 +11,9 @@ LISTENING_PORT = 7001
 MAX_CONN = 5
 
 
+
 connections = queue.Queue(maxsize=100)
+
 
 def handle_connections():
     while(True):
@@ -21,9 +24,11 @@ def handle_connections():
         conn.print_data()
         conn.proxy_server()
     
+
 def start():
     """listen for incoming connections and put them in the connections queue"""
 
+    os.system("clear")
     f = Figlet(font='slant')
     print(f.renderText('proxpy'))
 
@@ -48,6 +53,8 @@ def start():
         except KeyboardInterrupt:
             print("\n[*] Shutting down...")
             s.close()
+            os.system("clear")
             sys.exit(1)
+
 
 start()
