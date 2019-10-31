@@ -1,4 +1,4 @@
-import socket, time, os, tempfile, errno
+import socket, time, os, tempfile, errno, sys
 from subprocess import call
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +11,8 @@ BUFFER_SIZE = 8192
 
 def parse_data(data):
     """parses host, port, method, decoded data from request and returns them"""
+
+    print("[parse data]:\n{}\n".format(str(data)))
 
     first_line = data.split(b'\n')[0]
 
@@ -34,6 +36,19 @@ def parse_data(data):
         port = int((full_addr[(port_pos+1):])[:host_pos-port_pos-1])
         host = full_addr[:port_pos]
 
+    # host_line = data.split(b'\n')[1]
+    # host_line_arr = host_line.split(b':')
+    # print("host_line_arr: " + str(host_line_arr))
+    # if len(host_line_arr) == 2:
+    #     host = host_line_arr[0]
+    #     port = host_line_arr[1]
+    # elif len(host_line_arr) == 1:
+    #     host = host_line_arr[0]
+    #     port = 80
+    # else:
+    #     print("Can't handle the request... Exiting...")
+    #     sys.exit(2)
+
     # Remove host from requested resource path
     data_str = data.decode('utf-8')
     data_arr = data_str.split(' ')
@@ -53,6 +68,14 @@ def parse_data(data):
     return host, port, data_new, method
 
 
+def set_path_original(data, host, port):
+    data_arr = data.split(' ')
+    path_orig = "http://" + host.decode('utf-8') + ":" + str(port) + data_arr[1]
+    data_arr[1] = path_orig
+
+    return str(' '.join(data_arr))
+
+
 class Connection:
 
 
@@ -67,6 +90,8 @@ class Connection:
 
 
     def proxy_server(self):
+        print("proxy server\n" + str(self.data))
+        print("[Host]: {}\n[Port]: {}\n".format(self.host, self.port))
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
@@ -78,20 +103,24 @@ class Connection:
             while(time.time() < timeout_start + timeout):
                 res = s.recv(BUFFER_SIZE)
                 if (len(res) > 0):
-                    self.conn.send(res)
+                    if self.conn:
+                        self.conn.send(res)
                     result = result + res.decode('utf-8')
                 else:
                     break
             self.response = result
 
             s.close()
-            self.conn.close()
+            if self.conn:
+                self.conn.close()
 
             return
 
         except socket.error:
+            print("[ERROR]\n{}".format(socket.error))
             s.close()
-            self.conn.close()
+            if self.conn:
+                self.conn.close()
 
             return
 
@@ -146,8 +175,9 @@ class Connection:
                     if exc.errno != errno.EEXIST:
                         raise
 
+            data_with_orig_path = set_path_original(self.data, self.host, self.port)
             with open(filename, "w") as f:
-                f.write(self.data)
+                f.write(data_with_orig_path)
 
             print("Saved request in: " + filename)
             time.sleep(2)
