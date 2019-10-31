@@ -1,5 +1,7 @@
-import socket, time, os, tempfile
+import socket, time, os, tempfile, errno
 from subprocess import call
+from datetime import datetime
+from pathlib import Path
 
 
 
@@ -99,9 +101,10 @@ class Connection:
         print("[REQUEST]\n{}\n".format(self.data))
         print("1) Forward request")
         print("2) Modify request")
+        print("3) Save request")
         while(True):
             r = int(input("> "))
-            if r in [1, 2]:
+            if r in range(1, 4):
                 break
             else:
                 print("Get your shit together")
@@ -123,5 +126,30 @@ class Connection:
                 call([editor, tf.name])
                 tf.seek(0)
                 self.data = tf.read().decode('utf-8')
+
+            self.process_request()
+        
+        elif r == 3:
+            # Save request
+            now = datetime.now()
+            default_name = "Request-" + now.strftime("%Y-%m-%d") + "-at-" + now.strftime("%H-%M-%S")
+            name = input("File name [default: " + default_name + "] > ")
+            if name == '':
+                name = default_name
+            filename = str(Path.home()) + "/.appdata/proxpy/" + name + ".req"
+
+            if not os.path.exists(os.path.dirname(filename)):
+                try:
+                    os.makedirs(os.path.dirname(filename))
+                except OSError as exc: 
+                    # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+
+            with open(filename, "w") as f:
+                f.write(self.data)
+
+            print("Saved request in: " + filename)
+            time.sleep(2)
 
             self.process_request()
