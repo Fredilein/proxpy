@@ -1,3 +1,4 @@
 *.lock
 .vim
 .vscode
+.DS_Store
